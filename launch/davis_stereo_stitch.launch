@@ -1,0 +1,30 @@
+<launch>
+  <!-- master DAVIS -->
+  <node ns="davis_left" name="davis_ros_driver" pkg="davis_ros_driver" type="davis_ros_driver" output="screen">
+    <param name="serial_number" type="str" value="00000306" />
+    <rosparam command="load" file="$(find davis_ros_driver)/config/DAVIS240C.yaml" />
+    <param name="master" value="True"/>
+
+    <!-- timeout before resetting time -->
+    <param name="reset_timestamps_delay" value="2.0"/>
+  </node>
+
+  <!-- slave DAVIS -->
+  <node ns="davis_right" name="davis_ros_driver" pkg="davis_ros_driver" type="davis_ros_driver" output="screen">
+    <param name="serial_number" type="str" value="00000311" />
+    <rosparam command="load" file="$(find davis_ros_driver)/config/DAVIS240C.yaml" />
+    <param name="master" value="False"/>
+
+    <!-- get reset signal from master -->
+    <remap from="reset_timestamps" to="/davis_left/reset_timestamps"/>
+  </node>
+
+  <node name="davis_stereo_stitch" pkg="davis_stereo_stitch" type="davis_stereo_stitch" output="screen">
+  </node>
+
+  <!-- display -->
+  <node name="image_view_stitch" pkg="rqt_image_view" type="rqt_image_view">
+    <remap from="image" to="stitch_image"/>
+  </node>
+
+</launch>
