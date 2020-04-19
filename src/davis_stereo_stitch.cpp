@@ -32,7 +32,7 @@ void DavisStereoStitch::imageCallback(const sensor_msgs::Image::ConstPtr &left_i
 
   try
   {
-    left_cv_ptr  = cv_bridge::toCvCopy(right_image);
+    left_cv_ptr = cv_bridge::toCvCopy(right_image);
     right_cv_ptr = cv_bridge::toCvCopy(left_image);
   }
   catch (cv_bridge::Exception &e)
@@ -45,31 +45,29 @@ void DavisStereoStitch::imageCallback(const sensor_msgs::Image::ConstPtr &left_i
   cv::cvtColor(left_cv_ptr->image, left_cv_image, CV_RGB2BGR);
   cv::cvtColor(right_cv_ptr->image, right_cv_image, CV_RGB2BGR);
 
-  
-  
   //构造特征提取器，这里使用orb特征点
   cv::Ptr<cv::ORB> orb = cv::ORB::create();
   //提取特征
   std::vector<cv::KeyPoint> left_keypoints, right_keypoints;
   orb->detect(left_cv_image, left_keypoints);
-	orb->detect(right_cv_image, right_keypoints);
+  orb->detect(right_cv_image, right_keypoints);
 
   //构造描述子提取器
   cv::Ptr<cv::DescriptorExtractor> descriptor = orb;
-	//提取描述子
-	cv::Mat left_descriptors, right_descriptors;
+  //提取描述子
+  cv::Mat left_descriptors, right_descriptors;
   descriptor->compute(left_cv_image, left_keypoints, left_descriptors);
   descriptor->compute(right_cv_image, right_keypoints, right_descriptors);
 
   //构造匹配器
-	cv::BFMatcher matcher(cv::NORM_L2, true);
-	//匹配描述子
-	std::vector<cv::DMatch> matches;
-	matcher.match(left_descriptors, right_descriptors, matches);
+  cv::BFMatcher matcher(cv::NORM_L2, true);
+  //匹配描述子
+  std::vector<cv::DMatch> matches;
+  matcher.match(left_descriptors, right_descriptors, matches);
 
   std::vector<cv::Point2f> left_selPoints, right_selPoints;
   //std::vector<int> left_pointIndexes, right_pointIndexes;
-  for(std::vector<cv::DMatch>::const_iterator it = matches.begin(); it != matches.end(); ++it)
+  for (std::vector<cv::DMatch>::const_iterator it = matches.begin(); it != matches.end(); ++it)
   {
     left_selPoints.push_back(left_keypoints.at(it->queryIdx).pt);
     right_selPoints.push_back(right_keypoints.at(it->trainIdx).pt);
@@ -77,7 +75,7 @@ void DavisStereoStitch::imageCallback(const sensor_msgs::Image::ConstPtr &left_i
 
   std::vector<uchar> inliers(left_selPoints.size(), 0);
   cv::Mat homography;
-	homography = findHomography(left_selPoints, right_selPoints, inliers, CV_FM_RANSAC, 1.0);
+  homography = findHomography(left_selPoints, right_selPoints, inliers, CV_FM_RANSAC, 1.0);
 
   //根据RANSAC重新筛选匹配
   std::vector<cv::DMatch> outMatches;
@@ -93,18 +91,18 @@ void DavisStereoStitch::imageCallback(const sensor_msgs::Image::ConstPtr &left_i
 
   //画出匹配图像
   //cv::Mat matchImage;
-	//cv::drawMatches(left_cv_image, left_keypoints, right_cv_image, right_keypoints, outMatches, matchImage, 255, 255);
+  //cv::drawMatches(left_cv_image, left_keypoints, right_cv_image, right_keypoints, outMatches, matchImage, 255, 255);
 
   //拼接
   int d = 20; //渐入渐出融合宽度
   cv::Mat result;
-	cv::warpPerspective(left_cv_image, result, homography, cv::Size(2 * left_cv_image.cols-d, left_cv_image.rows));//Size设置结果图像宽度，宽度裁去一部分，d可调
+  cv::warpPerspective(left_cv_image, result, homography, cv::Size(2 * left_cv_image.cols - d, left_cv_image.rows)); //Size设置结果图像宽度，宽度裁去一部分，d可调
 
   cv::Mat half(result, cv::Rect(0, 0, right_cv_image.cols - d, right_cv_image.rows));
   right_cv_image(cv::Range::all(), cv::Range(0, right_cv_image.cols - d)).copyTo(half);
   for (int i = 0; i < d; i++)
   {
-    result.col(right_cv_image.cols - d + i) = (d - i) / (float)d*right_cv_image.col(right_cv_image.cols - d + i) + i / (float)d*result.col(right_cv_image.cols - d + i);
+    result.col(right_cv_image.cols - d + i) = (d - i) / (float)d * right_cv_image.col(right_cv_image.cols - d + i) + i / (float)d * result.col(right_cv_image.cols - d + i);
   }
 
   cv_bridge::CvImage out_cv_image;
