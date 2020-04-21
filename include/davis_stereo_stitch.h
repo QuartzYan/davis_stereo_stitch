@@ -10,9 +10,12 @@
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/image_encodings.h>
 
+#include<opencv2/opencv.hpp>
+#include <opencv2/stitching.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/features2d/features2d.hpp>
+#include <opencv2/xfeatures2d.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 
 #include <dvs_msgs/Event.h>
@@ -21,6 +24,9 @@
 #include <message_filters/subscriber.h>
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
+
+using namespace cv;
+using namespace std;
 
 typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image,sensor_msgs::Image> imageSyncPolicy;
 typedef message_filters::sync_policies::ApproximateTime<dvs_msgs::EventArray,dvs_msgs::EventArray> eventSyncPolicy;
