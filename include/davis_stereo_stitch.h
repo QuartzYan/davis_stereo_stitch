@@ -37,12 +37,14 @@ public:
   DavisStereoStitch();
   ~DavisStereoStitch();
 
-
 private:
   // ROS interface
   ros::NodeHandle nh_;
   image_transport::Publisher image_pub_;
-  ros::Publisher event_pub_;
+  image_transport::Publisher event_image_pub_;
+  //ros::Publisher event_pub_;
+
+  ros::Subscriber left_camera_info_sub_, right_camera_info_sub_;
 
   message_filters::Subscriber<sensor_msgs::Image>* left_image_sub_ ;  
   message_filters::Subscriber<sensor_msgs::Image>* right_image_sub_;
@@ -52,9 +54,17 @@ private:
   message_filters::Subscriber<dvs_msgs::EventArray>* right_event_sub_;
   message_filters::Synchronizer<eventSyncPolicy>* event_sync_;
 
+  // callbacks
+  void cameraInfoLeftCallback(const sensor_msgs::CameraInfo::ConstPtr& msg);
+  void cameraInfoRightCallback(const sensor_msgs::CameraInfo::ConstPtr& msg);
   void imageCallback(const sensor_msgs::Image::ConstPtr& left_image, const sensor_msgs::Image::ConstPtr& right_image);
   void eventCallback(const dvs_msgs::EventArray::ConstPtr& left_event, const dvs_msgs::EventArray::ConstPtr& right_event);
 
+  sensor_msgs::CameraInfo camera_info_left_, camera_info_right_;
+  bool got_camera_info_left_, got_camera_info_right_;
+  cv::Mat left_camera_matrix_, left_dist_coeffs_;
+  cv::Mat right_camera_matrix_, right_dist_coeffs_;
+  cv::Mat homography_;
 };
 
 #endif //DAVIS_STEREO_STITCH_H
