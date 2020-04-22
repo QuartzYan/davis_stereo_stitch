@@ -27,4 +27,12 @@
     <remap from="image" to="stitch_image"/>
   </node>
 
+  <!-- <node name="image_view_left" pkg="rqt_image_view" type="rqt_image_view">
+    <remap from="image" to="stitch_image"/>
+  </node>
+
+  <node name="image_view_right" pkg="rqt_image_view" type="rqt_image_view">
+    <remap from="image" to="stitch_image"/>
+  </node> -->
+
 </launch>
