@@ -5,9 +5,9 @@ DavisStereoStitch::DavisStereoStitch()
   got_camera_info_left_ = false;
   got_camera_info_right_ = false;
 
-  homography_ =(Mat_<double>(3,3)<< 0.4691733582588685, 0.01693829632135474, 195.8979714865966,
-                                    -0.1988646459353245, 0.891629115900333, 11.29325891249503,
-                                    -0.001647931695331998, 1.424489038736943e-05, 1);
+  homography_ =(Mat_<double>(3,3)<< 0.4916559814809626, 0.1455768474611172, 150.7872720548855,
+                                    -0.2305138272924719, 0.9529974437006833, 12.4090961153593,
+                                    -0.001774090006639621, 0.0003216603110495318, 1);
 
   left_camera_info_sub_ = nh_.subscribe("/davis_left/camera_info", 1, &DavisStereoStitch::cameraInfoLeftCallback, this);
   right_camera_info_sub_ = nh_.subscribe("/davis_right/camera_info", 1, &DavisStereoStitch::cameraInfoRightCallback, this);
@@ -27,6 +27,8 @@ DavisStereoStitch::DavisStereoStitch()
   image_transport::ImageTransport it_(nh_);
   image_pub_ = it_.advertise("stitch_image", 1);
   event_image_pub_ = it_.advertise("stitch_event_image", 1);
+  left_event_image_pub_ = it_.advertise("left_event_image", 1);
+  right_event_image_pub_ = it_.advertise("right_event_image", 1);
   //event_pub_ = nh_.advertise<dvs_msgs::EventArray>("stitch_events", 1);
 }
 
@@ -67,111 +69,82 @@ void DavisStereoStitch::imageCallback(const sensor_msgs::Image::ConstPtr &left_i
     return;
   }
   
+  // static int k = 0;
 
-  // cv::Mat img1 = cv::imread("/home/caster/davis_ws/src/davis_stereo_stitch/1.jpg");
-  // cv::Mat img2 = cv::imread("/home/caster/davis_ws/src/davis_stereo_stitch/2.jpg");
-  // if (!img1.data || !img2.data)
-  // {
-  //   std::cout << "read image error!!!" << std::endl;
-  // }
-  // img1.copyTo(left_cv_image);
-  // img2.copyTo(right_cv_image);
+  // //std::cout << homography_ << std::endl;
 
-  // std::vector<cv::Mat> imgs;
-  // imgs.push_back(left_cv_image);
-  // imgs.push_back(right_cv_image);
-  // // 使用stitch函数进行拼接
-  // cv::Stitcher stitcher = cv::Stitcher::createDefault();
-	// cv::Mat result;
-	// Stitcher::Status status = stitcher.stitch(imgs, result);
-	// if (status != Stitcher::OK)
-	// {
-	// 	std::cout << "Can't stitch images, error code = " << int(status) << std::endl;
-	// }
+  //  if(k<5)
+  //  {
+  //    //构造特征提取器，这里使用orb特征点
+  //    cv::Ptr<cv::Feature2D> ptrFeature2D = cv::xfeatures2d::SIFT::create(1000);
+  //    std::vector<cv::KeyPoint> left_keypoints, right_keypoints;   //特征点
+  //    cv::Mat left_descriptors, right_descriptors;                 //描述子
 
-  static int k = 0;
+  //    //提取特征，描述子
+  //    ptrFeature2D->detectAndCompute(left_cv_image, cv::noArray(), left_keypoints, left_descriptors);
+  //    ptrFeature2D->detectAndCompute(right_cv_image, cv::noArray(), right_keypoints, right_descriptors);
 
-  //std::cout << homography_ << std::endl;
+//     // //基于FLANN的描述符对象匹配
+//     // cv::flann::Index flannIndex(right_descriptors, cv::flann::LshIndexParams(12, 20, 2), cvflann::FLANN_DIST_HAMMING);
+//     // cv::Mat matchIndex(left_descriptors.rows, 2, CV_32SC1);
+//     // cv::Mat matchDistance(left_descriptors.rows, 2, CV_32FC1);
+//     // flannIndex.knnSearch(left_descriptors, matchIndex, matchDistance, 2, cv::flann::SearchParams());//调用K邻近算法
+//     // //根据劳氏算法（Lowe's algorithm）选出优秀的匹配
+//     // std::vector<cv::DMatch> goodMatches;
+//     // std::vector<cv::Point2f> left_selPoints, right_selPoints;
+//     // int dd = 0;
+//     // for (int i = 0; i < matchDistance.rows; i++)
+//     // {
+//     //   if (matchDistance.at<float>(i, 0) < 0.6 * matchDistance.at<float>(i, 1))
+//     //   {
+//     //     cv::DMatch dmatches(i, matchIndex.at<int>(i, 0), matchDistance.at<float>(i, 0));
+//     //     goodMatches.push_back(dmatches);
+//     //     float x = left_keypoints[dd].pt.x;
+//     //     float y = left_keypoints[dd].pt.y;
+//     //     left_selPoints.push_back(cv::Point2f(x, y));
+//     //     x = right_keypoints[dd].pt.x;
+//     //     y = right_keypoints[dd].pt.y;
+//     //     right_selPoints.push_back(cv::Point2f(x, y));
+//     //     dd++;
+//     //   }
+//     // }
+//     //cv::Mat matchImage;
+//     //cv::drawMatches(left_cv_image, left_keypoints, right_cv_image, right_keypoints, goodMatches, matchImage);
 
-  if(k<5)
-  {
-    //构造特征提取器，这里使用orb特征点
-    cv::Ptr<cv::Feature2D> ptrFeature2D = cv::xfeatures2d::SIFT::create(1000);
-    std::vector<cv::KeyPoint> left_keypoints, right_keypoints;   //特征点
-    cv::Mat left_descriptors, right_descriptors;                 //描述子
+//      //构造匹配器,使用欧氏距离和交叉匹配策略进行图像匹配
+//      cv::BFMatcher matcher(cv::NORM_L2, true);
+//      //匹配描述子
+//      std::vector<cv::DMatch> matches;
+//      matcher.match(left_descriptors, right_descriptors, matches);
+//      std::vector<cv::Point2f> left_selPoints, right_selPoints;
+//      //std::vector<int> left_pointIndexes, right_pointIndexes;
+//      for (std::vector<cv::DMatch>::const_iterator it = matches.begin(); it != matches.end(); ++it)
+//      {
+//         float x = left_keypoints[it->queryIdx].pt.x;
+//         float y = left_keypoints[it->queryIdx].pt.y;
+//         left_selPoints.push_back(cv::Point2f(x, y));
+//         x = right_keypoints[it->trainIdx].pt.x;
+//         y = right_keypoints[it->trainIdx].pt.y;
+//         right_selPoints.push_back(cv::Point2f(x, y));
+//      }
 
-    //提取特征，描述子
-    ptrFeature2D->detectAndCompute(left_cv_image, cv::noArray(), left_keypoints, left_descriptors);
-    ptrFeature2D->detectAndCompute(right_cv_image, cv::noArray(), right_keypoints, right_descriptors);
+//      //使用RANSAC算法估算单应矩阵
+//      std::vector<char> inliers;
+//      homography_ = cv::findHomography(right_selPoints, left_selPoints, inliers, CV_FM_RANSAC, 1.0);
 
-    // //基于FLANN的描述符对象匹配
-    // cv::flann::Index flannIndex(right_descriptors, cv::flann::LshIndexParams(12, 20, 2), cvflann::FLANN_DIST_HAMMING);
-    // cv::Mat matchIndex(left_descriptors.rows, 2, CV_32SC1);
-    // cv::Mat matchDistance(left_descriptors.rows, 2, CV_32FC1);
-    // flannIndex.knnSearch(left_descriptors, matchIndex, matchDistance, 2, cv::flann::SearchParams());//调用K邻近算法
-    // //根据劳氏算法（Lowe's algorithm）选出优秀的匹配
-    // std::vector<cv::DMatch> goodMatches;
-    // std::vector<cv::Point2f> left_selPoints, right_selPoints;
-    // int dd = 0;
-    // for (int i = 0; i < matchDistance.rows; i++)
-    // {
-    //   if (matchDistance.at<float>(i, 0) < 0.6 * matchDistance.at<float>(i, 1))
-    //   {
-    //     cv::DMatch dmatches(i, matchIndex.at<int>(i, 0), matchDistance.at<float>(i, 0));
-    //     goodMatches.push_back(dmatches);
+//      cv::Mat matchImage;
+//      cv::drawMatches(left_cv_image, left_keypoints, 
+//                      right_cv_image, right_keypoints, 
+//                      matches, 
+//                      matchImage, 
+//                      cv::Scalar(255, 255, 255), 
+//                      cv::Scalar(255, 255, 255), 
+//                      inliers,
+//                      2);
 
-    //     float x = left_keypoints[dd].pt.x;
-    //     float y = left_keypoints[dd].pt.y;
-    //     left_selPoints.push_back(cv::Point2f(x, y));
-
-    //     x = right_keypoints[dd].pt.x;
-    //     y = right_keypoints[dd].pt.y;
-    //     right_selPoints.push_back(cv::Point2f(x, y));
-
-    //     dd++;
-    //   }
-    // }
-
-    //cv::Mat matchImage;
-    //cv::drawMatches(left_cv_image, left_keypoints, right_cv_image, right_keypoints, goodMatches, matchImage);
-
-
-    //构造匹配器,使用欧氏距离和交叉匹配策略进行图像匹配
-    cv::BFMatcher matcher(cv::NORM_L2, true);
-    //匹配描述子
-    std::vector<cv::DMatch> matches;
-    matcher.match(left_descriptors, right_descriptors, matches);
-    std::vector<cv::Point2f> left_selPoints, right_selPoints;
-    //std::vector<int> left_pointIndexes, right_pointIndexes;
-    for (std::vector<cv::DMatch>::const_iterator it = matches.begin(); it != matches.end(); ++it)
-    {
-      float x = left_keypoints[it->queryIdx].pt.x;
-      float y = left_keypoints[it->queryIdx].pt.y;
-      left_selPoints.push_back(cv::Point2f(x, y));
-
-      x = right_keypoints[it->trainIdx].pt.x;
-      y = right_keypoints[it->trainIdx].pt.y;
-      right_selPoints.push_back(cv::Point2f(x, y));
-    }
-
-
-    //使用RANSAC算法估算单应矩阵
-    std::vector<char> inliers;
-    homography_ = cv::findHomography(right_selPoints, left_selPoints, inliers, CV_FM_RANSAC, 1.0);
-
-    cv::Mat matchImage;
-    cv::drawMatches(left_cv_image, left_keypoints, 
-                    right_cv_image, right_keypoints, 
-                    matches, 
-                    matchImage, 
-                    cv::Scalar(255, 255, 255), 
-                    cv::Scalar(255, 255, 255), 
-                    inliers,
-                    2);
-
-  k++; 
-  std::cout << homography_ << std::endl;
-}
+//    k++; 
+//    std::cout << homography_ << std::endl;
+//  }
 
   //用单应矩阵对图像进行变换
   cv::Mat result;
@@ -224,6 +197,15 @@ void DavisStereoStitch::eventCallback(const dvs_msgs::EventArray::ConstPtr &left
   {
     return;
   }
+
+  cv_bridge::CvImage out_left_cv_image, out_right_cv_image;
+  left_cv_image.copyTo(out_left_cv_image.image);
+  out_left_cv_image.encoding = "bgr8";
+  left_event_image_pub_.publish(out_left_cv_image.toImageMsg());
+
+  right_cv_image.copyTo(out_right_cv_image.image);
+  out_right_cv_image.encoding = "bgr8";
+  right_event_image_pub_.publish(out_right_cv_image.toImageMsg());
 
   //用单应矩阵对图像进行变换
   cv::Mat result;
