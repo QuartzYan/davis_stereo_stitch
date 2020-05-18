@@ -43,7 +43,8 @@ private:
   image_transport::Publisher image_pub_;
   image_transport::Publisher event_image_pub_;
   //ros::Publisher event_pub_;
-
+  image_transport::Publisher left_event_image_pub_, right_event_image_pub_;
+  
   ros::Subscriber left_camera_info_sub_, right_camera_info_sub_;
 
   message_filters::Subscriber<sensor_msgs::Image>* left_image_sub_ ;  

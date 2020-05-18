@@ -68,18 +68,26 @@ void DavisStereoStitch::imageCallback(const sensor_msgs::Image::ConstPtr &left_i
   {
     return;
   }
+
+  if (!((left_cv_image.cols == camera_info_left_.width) && (left_cv_image.rows == camera_info_left_.height)))
+  {
+    return;
+  }
+  if (!((right_cv_image.cols == camera_info_right_.width) && (right_cv_image.rows == camera_info_right_.height)))
+  {
+    return;
+  }
+  
+  
   
   // static int k = 0;
-
   // //std::cout << homography_ << std::endl;
-
   //  if(k<5)
   //  {
   //    //构造特征提取器，这里使用orb特征点
   //    cv::Ptr<cv::Feature2D> ptrFeature2D = cv::xfeatures2d::SIFT::create(1000);
   //    std::vector<cv::KeyPoint> left_keypoints, right_keypoints;   //特征点
   //    cv::Mat left_descriptors, right_descriptors;                 //描述子
-
   //    //提取特征，描述子
   //    ptrFeature2D->detectAndCompute(left_cv_image, cv::noArray(), left_keypoints, left_descriptors);
   //    ptrFeature2D->detectAndCompute(right_cv_image, cv::noArray(), right_keypoints, right_descriptors);
@@ -127,11 +135,9 @@ void DavisStereoStitch::imageCallback(const sensor_msgs::Image::ConstPtr &left_i
 //         y = right_keypoints[it->trainIdx].pt.y;
 //         right_selPoints.push_back(cv::Point2f(x, y));
 //      }
-
 //      //使用RANSAC算法估算单应矩阵
 //      std::vector<char> inliers;
 //      homography_ = cv::findHomography(right_selPoints, left_selPoints, inliers, CV_FM_RANSAC, 1.0);
-
 //      cv::Mat matchImage;
 //      cv::drawMatches(left_cv_image, left_keypoints, 
 //                      right_cv_image, right_keypoints, 
@@ -141,15 +147,21 @@ void DavisStereoStitch::imageCallback(const sensor_msgs::Image::ConstPtr &left_i
 //                      cv::Scalar(255, 255, 255), 
 //                      inliers,
 //                      2);
-
 //    k++; 
 //    std::cout << homography_ << std::endl;
 //  }
 
   //用单应矩阵对图像进行变换
   cv::Mat result;
-  cv::warpPerspective(right_cv_image, result, homography_, cv::Size(2*right_cv_image.cols,right_cv_image.rows));
-
+  try
+  {
+    cv::warpPerspective(right_cv_image, result, homography_, cv::Size(2*right_cv_image.cols,right_cv_image.rows));
+  }
+  catch(const std::exception& e)
+  {
+    std::cerr << e.what() << '\n';
+  }
+  
   //拼接
   cv::Mat half(result, cv::Rect(0, 0, left_cv_image.cols, left_cv_image.rows));
   left_cv_image.copyTo(half);
@@ -209,7 +221,14 @@ void DavisStereoStitch::eventCallback(const dvs_msgs::EventArray::ConstPtr &left
 
   //用单应矩阵对图像进行变换
   cv::Mat result;
-  cv::warpPerspective(right_cv_image, result, homography_, cv::Size(2*right_cv_image.cols,right_cv_image.rows));
+  try
+  {
+    cv::warpPerspective(right_cv_image, result, homography_, cv::Size(2*right_cv_image.cols,right_cv_image.rows));
+  }
+  catch(const std::exception& e)
+  {
+    std::cerr << e.what() << '\n';
+  }
   cv::Mat half(result, cv::Rect(0, 0, left_cv_image.cols, left_cv_image.rows));
   left_cv_image.copyTo(half);
 
