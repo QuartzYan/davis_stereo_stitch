@@ -1,0 +1,46 @@
+<launch>
+  <!-- master DAVIS -->
+  <node ns="davis_left" name="davis_ros_driver" pkg="davis_ros_driver" type="davis_ros_driver" output="screen">
+    <param name="serial_number" type="str" value="00000306" />
+    <rosparam command="load" file="$(find davis_ros_driver)/config/DAVIS240C.yaml" />
+    <param name="master" value="True"/>
+
+    <!-- timeout before resetting time -->
+    <param name="reset_timestamps_delay" value="2.0"/>
+  </node>
+
+  <!-- slave DAVIS -->
+  <node ns="davis_right" name="davis_ros_driver" pkg="davis_ros_driver" type="davis_ros_driver" output="screen">
+    <param name="serial_number" type="str" value="00000311" />
+    <rosparam command="load" file="$(find davis_ros_driver)/config/DAVIS240C.yaml" />
+    <param name="master" value="False"/>
+
+    <!-- get reset signal from master -->
+    <remap from="reset_timestamps" to="/davis_left/reset_timestamps"/>
+  </node>
+
+  <!-- visualization -->
+  <node name="dvs_renderer_left" pkg="dvs_renderer" type="dvs_renderer">
+    <param name="display_method" value="red-blue"/>
+    <remap from="events" to="/davis_left/events" />
+    <remap from="image" to="/davis_left/image_raw" />
+    <remap from="dvs_rendering" to="dvs_rendering_left" />
+  </node>
+
+  <node name="dvs_renderer_right" pkg="dvs_renderer" type="dvs_renderer">
+    <param name="display_method" value="red-blue"/>
+    <remap from="events" to="/davis_right/events" />
+    <remap from="image" to="/davis_right/image_raw" />
+    <remap from="dvs_rendering" to="dvs_rendering_right" />
+  </node>
+
+  <!-- display -->
+  <node name="image_view_left" pkg="rqt_image_view" type="rqt_image_view">
+    <remap from="image" to="stitch_image"/>
+  </node>
+
+  <node name="image_view_right" pkg="rqt_image_view" type="rqt_image_view">
+    <remap from="image" to="stitch_image"/>
+  </node>
+
+</launch>
