@@ -17,12 +17,14 @@
     <remap from="reset_timestamps" to="/davis_left/reset_timestamps"/>
   </node>
 
+  <arg name="stitch_find_mode" default="False"/>
+
   <!-- stitch -->
   <node name="davis_stereo_stitch" pkg="davis_stereo_stitch" type="davis_stereo_stitch" output="screen">
     <rosparam param="/homography">[0.5, 0.145, 150.787,
                                    -0.2305, 0.95, 12.41, 
                                    -0.001774, 0.000321, 1]</rosparam>
-    <rosparam param="/stitch_find_mode">False</rosparam>
+    <rosparam param="/stitch_find_mode" subst_value="True">$(arg stitch_find_mode)</rosparam>
   </node>
 
   <!-- display -->
