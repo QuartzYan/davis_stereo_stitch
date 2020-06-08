@@ -6,6 +6,8 @@
 #include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.h>
 
+#include <std_msgs/Bool.h>
+
 #include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/image_encodings.h>
@@ -60,12 +62,17 @@ private:
   void cameraInfoRightCallback(const sensor_msgs::CameraInfo::ConstPtr& msg);
   void imageCallback(const sensor_msgs::Image::ConstPtr& left_image, const sensor_msgs::Image::ConstPtr& right_image);
   void eventCallback(const dvs_msgs::EventArray::ConstPtr& left_event, const dvs_msgs::EventArray::ConstPtr& right_event);
+  void findStitchCallback(const std_msgs::Bool::ConstPtr& msg);
 
   sensor_msgs::CameraInfo camera_info_left_, camera_info_right_;
   bool got_camera_info_left_, got_camera_info_right_;
   cv::Mat left_camera_matrix_, left_dist_coeffs_;
   cv::Mat right_camera_matrix_, right_dist_coeffs_;
   cv::Mat homography_;
+
+  bool find_stitch_once_;
+  bool stitch_calibration_mode_;
+  ros::Subscriber stitch_calibration_pub_;
 };
 
 #endif //DAVIS_STEREO_STITCH_H
