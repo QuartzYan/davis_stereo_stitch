@@ -21,9 +21,9 @@
 
   <!-- stitch -->
   <node name="davis_stereo_stitch" pkg="davis_stereo_stitch" type="davis_stereo_stitch" output="screen">
-    <rosparam param="/homography">[0.5, 0.145, 150.787,
-                                   -0.2305, 0.95, 12.41, 
-                                   -0.001774, 0.000321, 1]</rosparam>
+    <rosparam param="/homography">[0.385815138416276, -0.04302951951000493, 165.737557919644,
+                                  -0.2033143592460488, 0.7718620876332584, 23.49481879941964,
+                                  -0.001544193299986335, -0.0003502925835596213, 1]</rosparam>
     <rosparam param="/stitch_find_mode" subst_value="True">$(arg stitch_find_mode)</rosparam>
   </node>
 

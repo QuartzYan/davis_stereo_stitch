@@ -2,7 +2,7 @@
   <!-- DAVIS DRIVER -->
   <node name="davis_ros_driver" pkg="davis_ros_driver" type="davis_ros_driver" output="screen">
     <param name="serial_number" type="str" value="00000306" />
-    <rosparam command="load" file="$(find davis_ros_driver)/config/DAVIS240C.yaml" />
+    <rosparam command="load" file="$(find davis_ros_driver)/config/calib.yaml" />
   </node>
 
   <!-- visualization -->
