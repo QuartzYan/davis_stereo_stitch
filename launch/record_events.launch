@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>  
+  <!-- record events -->
+  <node name="record_events" pkg="davis_stereo_stitch" type="record_events.py" output="screen">    
+    <param name="topic_name" value="stitch_events"/>
+  </node>
+
+  <!--node name="record_events_left" pkg="davis_stereo_stitch" type="record_events.py" output="screen">
+    <param name="topic_name" value="davis_left/events"/> 
+  </node-->
+
+  <!--node name="record_events_right" pkg="davis_stereo_stitch" type="record_events.py" output="screen">
+    <param name="topic_name" value="davis_right/events"/> 
+  </node-->
+
+</launch>
