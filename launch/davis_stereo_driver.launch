@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <launch>
   <!-- master DAVIS -->
   <node ns="davis_left" name="davis_ros_driver" pkg="davis_ros_driver" type="davis_ros_driver" output="screen">
